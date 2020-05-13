@@ -18,15 +18,13 @@
 
 package io.github.ankushs92
 
-import java.io.{BufferedInputStream, File, FileInputStream}
-import java.util.zip.GZIPInputStream
-
-import io.github.ankushs92.model.{GeoNames, User, UserResult}
+import io.github.ankushs92.Util.{gis, haversine}
+import io.github.ankushs92.model.{Airport, User, UserResult}
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.scala._
-import org.apache.flink.configuration.{ConfigOption, Configuration}
+import org.apache.flink.configuration.Configuration
+import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 
-import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
@@ -36,67 +34,57 @@ import scala.io.Source
  * and run 'mvn clean package' on the command line.
  */
 object BatchJob {
-  private val USER_FILE = " /Users/ankushsharma/travel_audience/src/main/resources/user-geo-sample.csv.gz"
-  private val GEONAMES_FILE = " /Users/ankushsharma/travel_audience/src/main/resources/user-geo-sample.csv.gz"
+  private val USER_FILE = "/Users/ankushsharma/travel_audience/src/main/resources/user-geo-sample.csv.gz"
+  private val AIRPORTS_FILE = " /Users/ankushsharma/travel_audience/src/main/resources/user-geo-sample.csv.gz"
 
   def main(args: Array[String]) {
-    // set up the batch execution environment
-    val config = new Configuration()
-    config.set
-    val env = ExecutionEnvironment.getExecutionEnvironment
-    val totalMemory = Runtime.getRuntime.maxMemory()
-    val cores = Runtime.getRuntime.availableProcessors()
-    env.registerCachedFile(GEONAMES_FILE, "geoNames")
+    val env = StreamExecutionEnvironment.getExecutionEnvironment
+    env.registerCachedFile(AIRPORTS_FILE, "airports")
 
-    val usersDs : DataSet[User] = env.readCsvFile(USER_FILE, ignoreFirstLine = true)
+    val usersStream : DataStream[User] = env.readTextFile(USER_FILE)
+        .filter { line => !line.contains("latitude") }
+        .map { line =>
+          val split = line.split(",")
+          val uid = split(0)
+          //These values are assumed to exist for each user input event. In production scenario, maybe a filter would be performed to consider only those users
+          //that have both lat and lng values
+          val lat = split(1).toDouble
+          val lng = split(2).toDouble
+          User(uid, lat, lng)
+        }
 
-    usersDs.map(new MyMapper)
-        .print()
+      usersStream.map {new MyMapper}
+          .print()
 
-    // execute program
+    //Execute the program
     env.execute("Travel Audience Task")
   }
 }
 
-// extend a RichFunction to have access to the RuntimeContext
 class MyMapper extends RichMapFunction[User, UserResult] {
 
-  private val geoNames = ListBuffer[GeoNames]()
+  private val airports = new KDTree[Airport]
+
   override def open(config: Configuration): Unit = {
-    val geoNamesFile = getRuntimeContext.getDistributedCache.getFile("geoNames")
-    val start = System.currentTimeMillis()
-    println("Ok I think this is taking some time ")
-    val src = Source.fromInputStream(gis(geoNamesFile)) //We stream the file instead of loading everything in memory
+    val airportsFile = getRuntimeContext.getDistributedCache.getFile("airports")
+    //We stream the file instead of loading everything in memory
+    val src = Source.fromInputStream(gis(airportsFile))
     src.getLines()
-      .drop(1) // Header
+      .drop(1) // csv header
       .foreach { line =>
         val split = line.split(",")
         val iata = split(0)
         val lat = split(1).toDouble
         val lng = split(2).toDouble
-        geoNames += GeoNames(iata, lat, lng)
+        airports += Airport(iata, lat, lng)
     }
-    val stop = System.currentTimeMillis()
-    println("Time taken " + (stop - start))
+    airports.buildTree()
+    src.close()
   }
 
   override def map(user: User): UserResult = {
-    val min = geoNames
-      .toStream
-      .map {geoName => (geoName, euclideanDist(user, geoName)) }
-      .minBy { _._2 }
-      ._1
-    UserResult(user.uid, min.iata)
+    val nearestAirport = airports.findNearestNeighbour(user)
+    UserResult(user.uid, nearestAirport.iata)
   }
 
-  private def euclideanDist(user : User, geoNames : GeoNames) = {
-    val userLat = user.lat
-    val userLng = user.lng
-    val geoLat = geoNames.lat
-    val geoLng = geoNames.lng
-    Math.sqrt(
-      Math.pow(userLat - geoLat, 2) + Math.pow(userLng - geoLng, 2)
-    )
-  }
-  def gis(file: File) = new GZIPInputStream(new BufferedInputStream(new FileInputStream(file)))
 }
