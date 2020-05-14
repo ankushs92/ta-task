@@ -18,14 +18,13 @@
 
 package io.github.ankushs92
 
-import io.github.ankushs92.Util.{gis, haversine}
+import io.github.ankushs92.Util.gis
 import io.github.ankushs92.model.{Airport, User, UserResult}
 import org.apache.flink.api.common.functions.RichMapFunction
 import org.apache.flink.api.scala._
 import org.apache.flink.configuration.Configuration
 import org.apache.flink.streaming.api.scala.{DataStream, StreamExecutionEnvironment}
 
-import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
 /**
@@ -34,6 +33,7 @@ import scala.io.Source
  * and run 'mvn clean package' on the command line.
  */
 object BatchJob {
+  //  private val logger = Logger(this.getClass)
   private val USER_FILE = "/Users/ankushsharma/travel_audience/src/main/resources/user-geo-sample.csv.gz"
   private val AIRPORTS_FILE = " /Users/ankushsharma/travel_audience/src/main/resources/user-geo-sample.csv.gz"
 
@@ -41,20 +41,22 @@ object BatchJob {
     val env = StreamExecutionEnvironment.getExecutionEnvironment
     env.registerCachedFile(AIRPORTS_FILE, "airports")
 
-    val usersStream : DataStream[User] = env.readTextFile(USER_FILE)
-        .filter { line => !line.contains("latitude") }
-        .map { line =>
-          val split = line.split(",")
-          val uid = split(0)
-          //These values are assumed to exist for each user input event. In production scenario, maybe a filter would be performed to consider only those users
-          //that have both lat and lng values
-          val lat = split(1).toDouble
-          val lng = split(2).toDouble
-          User(uid, lat, lng)
-        }
+    val usersStream: DataStream[User] = env.readTextFile(USER_FILE)
+      .filter { line => !line.contains("latitude") }
+      .map { line =>
+        val split = line.split(",")
+        val uid = split(0)
+        //These values are assumed to exist for each user input event. In production scenario, maybe a filter would be performed to consider only those users
+        //that have both lat and lng values
+        val lat = split(1).toDouble
+        val lng = split(2).toDouble
+        User(uid, lat, lng)
+      }
 
-      usersStream.map {new MyMapper}
-          .print()
+    usersStream.map {
+      new MyMapper
+    }
+      .print()
 
     //Execute the program
     env.execute("Travel Audience Task")
@@ -63,11 +65,10 @@ object BatchJob {
 
 class MyMapper extends RichMapFunction[User, UserResult] {
 
-  private val airports = new KDTree[Airport]
+  private val airportsIndex = new SpatialIndex[Airport]
 
   override def open(config: Configuration): Unit = {
     val airportsFile = getRuntimeContext.getDistributedCache.getFile("airports")
-    //We stream the file instead of loading everything in memory
     val src = Source.fromInputStream(gis(airportsFile))
     src.getLines()
       .drop(1) // csv header
@@ -76,9 +77,9 @@ class MyMapper extends RichMapFunction[User, UserResult] {
         val iata = split(0)
         val lat = split(1).toDouble
         val lng = split(2).toDouble
-        airports += Airport(iata, lat, lng)
-    }
-    airports.buildTree()
+        airportsIndex += Airport(iata, lat, lng)
+      }
+    airportsIndex.buildTree()
     src.close()
   }
 
