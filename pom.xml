@@ -41,6 +41,11 @@ under the License.
 				<enabled>true</enabled>
 			</snapshots>
 		</repository>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+
 	</repositories>
 
 	<properties>
@@ -67,6 +72,13 @@ under the License.
 <!--			<scope>provided</scope>-->
 		</dependency>
 
+
+		<dependency>
+			<groupId>com.github.EdwardRaff</groupId>
+			<artifactId>JSAT</artifactId>
+			<version>-SNAPSHOT</version>
+		</dependency>
+
 		<!-- Scala Library, provided by Flink as well. -->
 		<dependency>
 			<groupId>org.scala-lang</groupId>
@@ -74,26 +86,14 @@ under the License.
 			<version>${scala.version}</version>
 <!--			<scope>provided</scope>-->
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.30</version>
 		</dependency>
 
-		<!-- Add connector dependencies here. They must be in the default scope (compile). -->
 
-		<!-- Example:
-
-		<dependency>
-			<groupId>org.apache.flink</groupId>
-			<artifactId>flink-connector-kafka-0.10_${scala.binary.version}</artifactId>
-			<version>${flink.version}</version>
-		</dependency>
-		-->
-
-		<!-- Add logging framework, to produce console output when running in the IDE. -->
-		<!-- These dependencies are excluded from the application JAR by default. -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>

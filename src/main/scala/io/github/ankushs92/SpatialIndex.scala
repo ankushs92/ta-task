@@ -1,10 +1,10 @@
 package io.github.ankushs92
 
-import java.lang.Math.{asin, cos, pow, sin, sqrt}
+import io.github.ankushs92.model.{TwoDVector, User}
+import jsat.linear.Vec
+import jsat.linear.vectorcollection.BallTree
+import jsat.utils.{DoubleList, IntList}
 
-import io.github.ankushs92.model.{Airport, TwoDVector, User}
-
-import scala.collection.mutable.ListBuffer
 import scala.reflect.ClassTag
 
 
@@ -15,103 +15,34 @@ import scala.reflect.ClassTag
  */
 case class SpatialIndex[T <: TwoDVector](implicit c: ClassTag[T]) {
 
-  private val coordinates = ListBuffer[T]()
-  private val kdTree = KDTree[T](coordinates)
+  val ballTree = new BallTree[BallTreeNode[T]](new HaversineDistance, BallTree.ConstructionMethod.KD_STYLE, BallTree.PivotSelection.MEDOID)
 
-  def +=(value: T) : Unit = coordinates += value
-  def build(): Unit = kdTree.build()
-  def findNearestNeighbour(search: User): T = kdTree.nearestNeighbour(search.lat, search.lng)
+  def +=(value: T) : Unit = ballTree.insert(BallTreeNode(value))
 
-}
-
-case class KDTree[T <: TwoDVector](values: ListBuffer[T])(implicit c: ClassTag[T]) {
-
-  private var rootNode : Option[KDNode[T]] = None
-
-  def insert(value: T, depth: Int, nodeOpt: Option[KDNode[T]]): Option[KDNode[T]] = {
-    val axis = depth % 2
-    nodeOpt match {
-      case Some(_) => Some(KDNode[T](value, None, None))
-      case None =>
-        val node = nodeOpt.get
-        val nodeValue = node.value
-        if (value.forAxis(axis) < nodeValue.forAxis(axis)) {
-          node.left = insert(value, axis + 1, node.left)
-        }
-        else {
-          node.right = insert(value, axis + 1, node.right)
-        }
-        nodeOpt
-    }
-  }
-
-  def build() : Unit = {
-    val sorted = values.distinct.sortWith(_.getX() < _.getX())
-    val medianIndex = sorted.length / 2
-    val median = sorted(medianIndex)
-    rootNode = Option(KDNode[T](median, None, None))
-    sorted.remove(medianIndex)
-    values.foreach { point => rootNode = insert(point, 0, rootNode) }
-  }
-
-
-  def nearestNeighbour(xCord : Double, yCord : Double) : T = {
-    var minDist : Double = 0.0
-    var closest : Option[T] = None
-    rootNode match {
-      case Some(_) => searchRec(xCord, yCord, rootNode, rootNode, Double.MaxValue)
-      case None =>
-    }
-    if(rootNode.isDefined) {
-
-    } else
-  }
-
-  private def searchRec(
-                         xCord : Double,
-                         yCord : Double,
-                         node : KDNode[T],
-                         ref : KDNode[T],
-                         min : Double
-                       ) : T = {
-    if(node.isLeaf) {
-      val leaf = node.value
-      val dist = haversine(xCord, yCord, leaf.getX(), leaf.getY())
-
-    }
-    null
-  }
-
-  override def toString: String = rootNode.getOrElse(Nil).toString
-
-  //Copied without shame from stackoverflow
-  private val R = 6372.8 //radius in km
-
-  def haversine(lat1 : Double, lng1 : Double, lat2 : Double, lng2: Double) = {
-    val dLat = (lat1 - lat2).toRadians
-    val dLon = (lng1 - lng2).toRadians
-
-    val a = pow(sin(dLat / 2), 2) + pow(sin(dLon / 2), 2) * cos(lat1.toRadians) * cos(lat2.toRadians)
-    val c = 2 * asin(sqrt(a))
-    R * c
+  def findNearestNeighbour(query: User): T = {
+    val neighbourIndex = new IntList()
+    val distance = new DoubleList()
+    val queryNode = BallTreeNode(query)
+    ballTree.search(queryNode, 1, neighbourIndex, distance)
+    val nearestNeighbour = ballTree.get(neighbourIndex.getI(0)) //We are only searching for one neighbour
+    nearestNeighbour.value
   }
 
 }
 
+sealed case class BallTreeNode[T <: TwoDVector](value : T) extends Vec {
+  override def length(): Int = 2
 
-case class KDNode[T](value: T, var left: Option[KDNode[T]], var right: Option[KDNode[T]]) {
+  override def get(idx : Int): Double = idx match {
+    case TwoDVector.X_AXIS_IDX => value.getXDimValue()
+    case TwoDVector.Y_AXIS_IDX => value.getYDimValue()
+  }
 
-  def isLeaf : Boolean = left.isEmpty && right.isEmpty
-  override def toString: String = s"Value : $value, LeftTree : $left, RightTree : $right"
-}
+  override def set(idx: Int, v: Double): Unit = null
 
+  override def isSparse: Boolean = false
 
-object T extends App {
-  val list = Array((7, 2), (5, 4), (9, 6), (4, 7), (8, 1), (2, 3))
-  //  val kd = new KDTree[Airport]
-  //  list.foreach { x =>
-  //    kd += Airport("", x._1, x._2)
-  //  }
-  //  kd.buildTree()
+  override def setLength(i: Int): Unit = null
 
+  override def clone(): Vec = this
 }
