@@ -6,6 +6,7 @@ object TwoDVector {
 }
 
 trait TwoDVector {
-  def getXDimValue() : Double
-  def getYDimValue() : Double
+  def getXDimValue(): Double
+
+  def getYDimValue(): Double
 }
