@@ -4,6 +4,7 @@ import io.github.ankushs92.model.TwoDVector
 import jsat.linear.Vec
 import jsat.linear.distancemetrics.DistanceMetric
 
+
 class HaversineDistance extends DistanceMetric {
 
   override def dist(vec1: Vec, vec2: Vec): Double = {

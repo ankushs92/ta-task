@@ -10,6 +10,10 @@ import org.apache.flink.configuration.Configuration
 
 import scala.io.Source
 
+/**
+ * A mapper that takes a User object, finds the nearest airport, and packages the (user.uid, closestairport.iata)
+ * pair in a UserResult object
+ */
 class ClosestAirportMapper extends RichMapFunction[User, UserResult] {
   //Lazy put here to avoid flink serialization exception
   private lazy val airportsIndex = new SpatialIndex[Airport]

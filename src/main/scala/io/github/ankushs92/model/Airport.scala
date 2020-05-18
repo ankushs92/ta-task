@@ -9,6 +9,11 @@ case class Airport(iata: String, lat: Double, lng: Double) extends TwoDVector {
 
 object Airport {
 
+  /**
+   * Resolve a csv line to an Airport object
+   * @param line the csv line
+   * @return
+   */
   def apply(line: String): Airport = {
     val split = line.split(",")
     val iata = split(0)

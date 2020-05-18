@@ -7,6 +7,12 @@ case class User(uid: String, lat: Double, lng: Double) extends TwoDVector {
 }
 
 object User {
+
+  /**
+   * Resolve a csv line to an User object
+   * @param line the csv line
+   * @return
+   */
   def apply(line: String): User = {
     val split = line.split(",")
     val uid = split(0)

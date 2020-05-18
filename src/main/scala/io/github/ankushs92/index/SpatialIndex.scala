@@ -11,7 +11,11 @@ class SpatialIndex[T <: TwoDVector] {
   private val ballTree = new BallTree[BallTreeNode[T]](new HaversineDistance, BallTree.ConstructionMethod.TOP_DOWN_FARTHEST, BallTree.PivotSelection.MEDOID)
   private val ONE_NEIGHBOUR = 1
 
+  /**
+   * Add a value to the spatial index
+   */
   def +=(value: T): Unit = ballTree.insert(BallTreeNode(value))
+
 
   def findNearestNeighbour(query: User): T = {
     val neighbourIndex = new IntList()

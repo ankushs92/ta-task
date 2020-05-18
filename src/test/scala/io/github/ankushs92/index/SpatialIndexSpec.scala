@@ -3,19 +3,17 @@ package io.github.ankushs92.index
 import java.io.{BufferedInputStream, InputStream}
 import java.util.zip.GZIPInputStream
 
-import io.github.ankushs92.model.{Airport, User}
+import io.github.ankushs92.model.Constants._
+import io.github.ankushs92.model.{Airport, Constants, User}
 import org.scalatest._
 
 import scala.io.Source
 
 class SpatialIndexSpec extends FlatSpec {
 
-  private val airportsFile = "/optd-airports-sample.csv.gz"
-  private val usersFile = "/user-geo-sample.csv.gz"
-
   "SpatialIndex implemented as a BallTree " should " yield same result as naive implementation" in {
-    val airportsSrc = Source.fromInputStream(gzipIs(getClass.getResourceAsStream(airportsFile)))
-    val usersSrc = Source.fromInputStream(gzipIs(getClass.getResourceAsStream(usersFile)))
+    val airportsSrc = Source.fromInputStream(gzipIs(getClass.getResourceAsStream(AIRPORTS_FILE_NAME)))
+    val usersSrc = Source.fromInputStream(gzipIs(getClass.getResourceAsStream(USERS_FILE_NAME)))
 
     val airports = airportsSrc
       .getLines()
