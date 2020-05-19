@@ -29,10 +29,15 @@ The two approaches are
 Go to ```src/main/scala/io/github/ankushs92/TravelAudienceStreamingJob```. Provide the 3 arguments described above. Run the main method. That's it.
 
 2. Build the project and use the jar
+
 -> Go to the root of the project and do a ```mvn clean package```. This would run the test as well. 
+
 -> Provide the 3 arguments described above
+
 -> Go to ```/target```, and look for ```travel_audience-1.0-SNAPSHOT.jar```
+
 -> Execute ```java -jar /path/to/jar /path/to/user-geo-sample.csv.gz /path/to/optd-airports-sample.csv.gz /path/to/outputDir```
+  
    On my machine it looks something like this : 
   ```java -jar /Users/ankushsharma/travel_audience/target/travel_audience-1.0-SNAPSHOT.jar /Users/ankushsharma/travel_audience/src/main/resources/user-geo-sample.csv.gz /Users/ankushsharma/travel_audience/src/main/resources/optd-airports-sample.csv.gz  /Users/ankushsharma/Documents/coracle/travel_audience```
 
