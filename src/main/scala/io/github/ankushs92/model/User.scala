@@ -10,6 +10,7 @@ object User {
 
   /**
    * Resolve a csv line to an User object
+   *
    * @param line the csv line
    * @return
    */

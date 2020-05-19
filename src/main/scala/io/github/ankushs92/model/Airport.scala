@@ -11,6 +11,7 @@ object Airport {
 
   /**
    * Resolve a csv line to an Airport object
+   *
    * @param line the csv line
    * @return
    */

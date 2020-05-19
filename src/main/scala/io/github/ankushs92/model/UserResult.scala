@@ -6,6 +6,7 @@ package io.github.ankushs92.model
  * @param iata the closest airport to the user
  */
 case class UserResult(uid: String, iata: String) {
+
   /**
    * This string value will be written to the file sink
    */

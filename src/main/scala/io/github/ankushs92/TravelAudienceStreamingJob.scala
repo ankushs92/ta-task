@@ -18,10 +18,12 @@
 
 package io.github.ankushs92
 
+import java.nio.file.Paths
+
 import akka.event.slf4j.Logger
 import io.github.ankushs92.mapper.ClosestAirportMapper
 import io.github.ankushs92.model.Constants._
-import io.github.ankushs92.model.{Constants, User, UserResult}
+import io.github.ankushs92.model.{User, UserResult}
 import io.github.ankushs92.util.Util._
 import org.apache.flink.api.common.serialization.SimpleStringEncoder
 import org.apache.flink.api.scala._
@@ -37,12 +39,14 @@ object TravelAudienceStreamingJob {
 
   def main(args: Array[String]) {
     val start = System.currentTimeMillis()
-    val outputPath = Option(args(0)).getOrElse(throw new RuntimeException("Please provide the path for output file!"))
-    val usersFileAbsPath = getAbsPath(USERS_FILE_NAME)
-    val airportsFileAbsPath = getAbsPath(AIRPORTS_FILE_NAME)
-    val streamEnv = StreamExecutionEnvironment.getExecutionEnvironment
+    val usersFilePath = Option(args(0)).getOrElse(throw new RuntimeException("Please provide the path for users file!"))
+    val airportsFilePath = Option(args(1)).getOrElse(throw new RuntimeException("Please provide the path for airport file!"))
+    val outputPath = Option(args(2)).getOrElse(throw new RuntimeException("Please provide the path for output file!"))
+    val usersFileAbsPath = flinkReadableAbsPath(usersFilePath)
+    val airportsFileAbsPath = flinkReadableAbsPath(airportsFilePath)
 
-    logger.info(s"Registering Airports file as Distributed Cache with cache name $AIRPORT_FILE_KEY")
+    val streamEnv = StreamExecutionEnvironment.getExecutionEnvironment
+    logger.info(s"Registering Airports file as Distributed Cache with key $AIRPORT_FILE_KEY")
     streamEnv.registerCachedFile(airportsFileAbsPath, AIRPORT_FILE_KEY)
 
     val usersStream: DataStream[User] =
@@ -68,10 +72,12 @@ object TravelAudienceStreamingJob {
     //Execute the program
     streamEnv.execute("Travel Audience Task")
     val stop = System.currentTimeMillis()
-    logger.info(s"Took ${stop - start} milliseconds to finish the job")
+    val timeTaken = toSeconds(stop - start)
+    logger.info(s"Took $timeTaken seconds to finish the job")
   }
 
   private def ignoreHeader = (string: String) => !string.contains("latitude")
+  private def toSeconds = (ms : Long) => ms / 1000
 
 }
 

@@ -1,6 +1,6 @@
 package io.github.ankushs92.index
 
-import io.github.ankushs92.model.TwoDVector
+import io.github.ankushs92.model.TwoDVector._
 import jsat.linear.Vec
 import jsat.linear.distancemetrics.DistanceMetric
 
@@ -8,10 +8,10 @@ import jsat.linear.distancemetrics.DistanceMetric
 class HaversineDistance extends DistanceMetric {
 
   override def dist(vec1: Vec, vec2: Vec): Double = {
-    val lat1 = vec1.get(TwoDVector.X_AXIS_IDX)
-    val lng1 = vec1.get(TwoDVector.Y_AXIS_IDX)
-    val lat2 = vec2.get(TwoDVector.X_AXIS_IDX)
-    val lng2 = vec2.get(TwoDVector.Y_AXIS_IDX)
+    val lat1 = vec1.get(X_AXIS_IDX)
+    val lng1 = vec1.get(Y_AXIS_IDX)
+    val lat2 = vec2.get(X_AXIS_IDX)
+    val lng2 = vec2.get(Y_AXIS_IDX)
     Distance.haversine(lat1, lng1, lat2, lng2)
   }
 

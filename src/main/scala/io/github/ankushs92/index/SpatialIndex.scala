@@ -16,13 +16,12 @@ class SpatialIndex[T <: TwoDVector] {
    */
   def +=(value: T): Unit = ballTree.insert(BallTreeNode(value))
 
-
   def findNearestNeighbour(query: User): T = {
-    val neighbourIndex = new IntList()
-    val distance = new DoubleList()
+    val neighboursIndex = new IntList()
+    val distances = new DoubleList()
     val queryNode = BallTreeNode(query)
-    ballTree.search(queryNode, ONE_NEIGHBOUR, neighbourIndex, distance)
-    val nearestNeighbour = ballTree.get(neighbourIndex.getI(0))
+    ballTree.search(queryNode, ONE_NEIGHBOUR, neighboursIndex, distances)
+    val nearestNeighbour = ballTree.get(neighboursIndex.getI(0))
     nearestNeighbour.value
   }
 
@@ -36,11 +35,11 @@ sealed case class BallTreeNode[T <: TwoDVector](value: T) extends Vec {
     case TwoDVector.Y_AXIS_IDX => value.getYDimValue()
   }
 
-  override def set(idx: Int, v: Double): Unit = null
+  override def set(idx: Int, v: Double): Unit = ???
 
   override def isSparse: Boolean = false
 
-  override def setLength(i: Int): Unit = null
+  override def setLength(i: Int): Unit = ???
 
   override def clone(): Vec = this
 }

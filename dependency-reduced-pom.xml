@@ -20,10 +20,7 @@
             <configuration>
               <artifactSet>
                 <excludes>
-                  <exclude>org.apache.flink:force-shading</exclude>
                   <exclude>com.google.code.findbugs:jsr305</exclude>
-                  <exclude>org.slf4j:*</exclude>
-                  <exclude>log4j:*</exclude>
                 </excludes>
               </artifactSet>
               <filters>
@@ -38,7 +35,10 @@
               </filters>
               <transformers>
                 <transformer>
-                  <mainClass>io.github.ankushs92.StreamingJob</mainClass>
+                  <mainClass>io.github.ankushs92.TravelAudienceStreamingJob</mainClass>
+                </transformer>
+                <transformer>
+                  <resource>reference.conf</resource>
                 </transformer>
               </transformers>
             </configuration>
@@ -59,16 +59,42 @@
         <version>3.2.2</version>
         <executions>
           <execution>
+            <id>compile</id>
+            <phase>compile</phase>
             <goals>
               <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>test-compile</id>
+            <phase>test-compile</phase>
+            <goals>
               <goal>testCompile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <id>scala-test</id>
+            <goals>
+              <goal>test</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <args>
-            <arg>-nobootcp</arg>
-          </args>
+          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+          <stdout>W</stdout>
         </configuration>
       </plugin>
       <plugin>
@@ -147,12 +173,6 @@
   </repositories>
   <dependencies>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.30</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_2.11</artifactId>
       <version>3.1.2</version>
@@ -163,18 +183,6 @@
           <groupId>org.scalactic</groupId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.7</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <version>1.2.17</version>
-      <scope>runtime</scope>
     </dependency>
   </dependencies>
   <properties>

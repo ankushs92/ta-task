@@ -9,14 +9,15 @@ import org.scalatest._
 
 import scala.io.Source
 
-class SpatialIndexSpec extends FlatSpec {
+//@RunWith(classOf[JUnitRunner])
+class SpatialIndexTest extends FlatSpec {
 
   "SpatialIndex implemented as a BallTree " should " yield same result as naive implementation" in {
     val airportsSrc = Source.fromInputStream(gzipIs(getClass.getResourceAsStream(AIRPORTS_FILE_NAME)))
     val usersSrc = Source.fromInputStream(gzipIs(getClass.getResourceAsStream(USERS_FILE_NAME)))
 
     val airports = airportsSrc
-      .getLines()
+      .getLines
       .drop(1)
       .map { line => Airport(line) }
       .toList
@@ -24,7 +25,7 @@ class SpatialIndexSpec extends FlatSpec {
     //Take the first 1000 users
     //Build a cache of [user.uid, closestairport.iata] pairs. This is built on top of naive implementation
     val users = usersSrc
-      .getLines()
+      .getLines
       .slice(1, 1001) // Ignoring header
       .map { line => User(line) }
       .toList
@@ -47,9 +48,9 @@ class SpatialIndexSpec extends FlatSpec {
 
     //This is the actual check for the first 1000 (users,closestAirport) pairs done via naive implementation against spatial index
     users.foreach { user =>
-      val closestAirportViaNaive = userResultsNaive(user.uid)
-      val closestAiportViaSpatialIndex = spatialIndex.findNearestNeighbour(user).iata
-      assert(closestAirportViaNaive == closestAiportViaSpatialIndex)
+      val closestAirportViaNaiveImpl = userResultsNaive(user.uid)
+      val closestAirportViaSpatialIndex = spatialIndex.findNearestNeighbour(user).iata
+      assert(closestAirportViaNaiveImpl == closestAirportViaSpatialIndex)
     }
 
     airportsSrc.close()

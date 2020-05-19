@@ -10,12 +10,33 @@
 5. Each user item is streamed from the users file, wherein each worker reads a partition of the users file and a user object is enriched with the closest airport via a findNearestNeighbour search made to the local spatial index on each worker
 (REFER TO design IMAGE)
 
+6. The final results are outputted in a file. You would need to pass the ```outputPath``` to the program. The ```StreamingFileSink``` will write the results into this directory 
 
-## Testing
 
+## Tests
+I've tested the spatial tree implementation against the naive implementation for the first 1000 entries in the user file. Check ```test/scala/io/github/ankushs92/index/SpatialIndexSpec``` and run it if you wish.
 
 ## Setup
+The users and airport file are already put under ```src/main/resources``` . The program expects an ```outputPath```, which should be a directory under which the output file will be written to.
 
+
+You can run the application in two ways. In both approaches, 3 program arguments are expected : ```/path/to/user-geo-sample.csv.gz```, ```/path/to/optd-airports-sample.csv.gz```, ```/path/to/outputDir```. 
+Here, ```path/to/outputDir``` is the directory where will the output of the program will be written.
+
+The two approaches are 
+
+1. Import the project directly in your IDE
+Go to ```src/main/scala/io/github/ankushs92/TravelAudienceStreamingJob```. Provide the 3 arguments described above. Run the main method. That's it.
+
+2. Build the project and use the jar
+-> Go to the root of the project and do a ```mvn clean package```. This would run the test as well. 
+-> Provide the 3 arguments described above
+-> Go to ```/target```, and look for ```travel_audience-1.0-SNAPSHOT.jar```
+-> Execute ```java -jar /path/to/jar /path/to/user-geo-sample.csv.gz /path/to/optd-airports-sample.csv.gz /path/to/outputDir```
+   On my machine it looks something like this : 
+  ```java -jar /Users/ankushsharma/travel_audience/target/travel_audience-1.0-SNAPSHOT.jar /Users/ankushsharma/travel_audience/src/main/resources/user-geo-sample.csv.gz /Users/ankushsharma/travel_audience/src/main/resources/optd-airports-sample.csv.gz  /Users/ankushsharma/Documents/coracle/travel_audience```
+
+PS : I have turned off Flink-logging, so you won't be able to see Flink logs. If you wish to see flink logs, go to ```src/main/resources/log4j.properrties```, and put ```log4j.category.org.apache.flink=INFO``` . 
 
 ## Spatial Indexing
 Initially, my approach was to lay out the base code structure with the naive implementation of iterating over all data points just to see how it would perform. In this approach, the program never terminated.
