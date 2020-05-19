@@ -3,7 +3,7 @@
 
 2. For distance between query point and airports, haversine is used 
 
-3. For spatial indexing BallTree[1] was used to partition the (lat,lng) pairs in airports file. This implementation performed far superior ( O(logn) avg case) as compared to the naive implementation that iterates over all the airports and finds minimum distance(O(n) time complexity)
+3. For spatial indexing BallTree[1] was used to partition the (lat,lng) pairs in airports file. This implementation performed far superior ( O(logn) avg case) as compared to the naive implementation that iterates over all the airports and finds minimum distance(O(n) time complexity for any query point)
 
 4. The spatial index is built on each flink worker when the worker starts(one worker runs on one core). Takes roughly 700ms-1300 ms to build the index
  
