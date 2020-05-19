@@ -28,12 +28,9 @@ Go to ```src/main/scala/io/github/ankushs92/TravelAudienceStreamingJob```. Provi
 
 2. Build the project and use the jar
 
-* Go to the root of the project and do a ```mvn clean package```. This would run the test as well. 
-
+* Go to the root of the project and do a ```mvn clean package```. This would execute the test as well. 
 * Provide the 3 arguments described above
-
 * Go to ```/target```, and look for ```travel_audience-1.0-SNAPSHOT.jar```
-
 * Execute ```java -jar /path/to/jar /path/to/user-geo-sample.csv.gz /path/to/optd-airports-sample.csv.gz /path/to/outputDir```
   
   On my machine it looks something like this : 
@@ -43,23 +40,25 @@ PS : I have turned off Flink-logging, so you won't be able to see Flink logs. If
 
 ## Spatial Indexing
 Initially, my approach was to lay out the base code structure with the naive implementation of iterating over all data points just to see how it would perform. In this approach, the program never terminated.
-The problem is essentially to find the nearest neighbour to the lat and lng of a user. This quickly hinted to a tree like structure wherein it would be possible to prune most of the search space.
-My initial approach was to use KD-Trees, but this would not have been correct because a KD-Tree partitions the search space into rectangles, and is therefore more suited for those applications where the distance between points
-is computed using euclidean distance. In our case, however, since we are using haversine distance, which computes distance of two points on a sphere, KD-Trees were not applicable, and therefore I had to look for a different spatial indexing strategy.
+The problem is essentially to find the nearest neighbour to the lat and lng of a user. This quickly hinted to a tree like structure wherein it should be possible to prune most of the search space.
+My initial approach was to use KD-Trees, but this would not have been correct because a KD-Tree partitions the search space into hyperrectangles(or rectangles in 2d space), and is therefore more suited for those applications where the distance between points
+is computed using euclidean distance and the (x,y) axis are parallel to the rectangle. In our case, however, since we are using haversine distance, which computes distance of two points on surface of a sphere, KD-Trees were not applicable, and therefore I had to look for a different spatial indexing strategy.
 A not-so-quick google search hinted towards BallTrees[1], which is a data structure similar to KD-Trees, with the exception that it can work with any distance metric that satisfies the triangle inequality(i.e also haversine).
 
-The implementation of BallTree is based on the open source JSAT library(which took some time to find!). It has different anchoring and pivoting strategies. I benchmarked and used the quickest one(Check the class SpatialIndex.scala).
+The implementation of BallTree is based on the open source JSAT library(which took some time to find!). It has different anchoring and pivoting strategies. I benchmarked and used the quickest one(check the class SpatialIndex.scala).
 
 ## But wait, just how the hell does it work?
-Flink is based on parallelism of operators. For instance, if you define parallelism of an operator to be 2, flink would ship the operator to 2 cores and run the operator there.(a highly simplified explaination)
-The default parallelism is the number of cores available on your system. 
+Flink is based on parallelism of operators. For instance, if you define parallelism of an operator to be 2, flink would ship the operator to 2 cores and run the operator there(a very simplified explanation)
+The default parallelism for the job as well as for individual operators is the number of cores available on your system. 
 
 What I did is the following : When flink starts, I register the airports file with Flink's DistributedCache. This file will be copied by flink to downstream operators.
-The ```ClosestAirportMapper.scala``` class, which is implementation of map operator, will be executed on as many cores as you have in your system, and as the workers are starting up, in the map transformation I open 
+The ```ClosestAirportMapper.scala``` class, which is implementation of map operator, will be executed on as many cores as you have in your system. As the workers are starting up, in the map transformation I open 
 the airportsFile made available via DistributedCache and build a local spatial index. This takes rougly 700ms - 1300 ms for each worker.
   
-Meanwhile, the usersFile is implemented as a DataStream. Flink interally will partition the file, and each 8 DataSource operator will work as a single task with downstream map operators(in our case, with ClosestAirportMapper).
-To put it simply, there would be as many partitions of the file as there are cores in your system, and each partition will stream the user object downstream to our ClosestAirportMapper, which would perform the nearestNeighbourSearch   
+Meanwhile, the usersFile is parsed as a DataStream. Flink will interally partition the file, and each DataSource operator will work as a single task with downstream map operators(in our case, with ClosestAirportMapper).
+To put it simply, there would be as many partitions of the file as there are cores in your system, and each partition will pipeline the user object downstream to our ClosestAirportMapper, which would perform the nearestNeighbourSearch in avg O(log(n)) time.
+
+The results are pipelined to a FileSink operator, which outputs the results to a file.
 
 The entire process from start to finish takes about 130-150 seconds depending if you execute it in your IDE or via jar file.
 
