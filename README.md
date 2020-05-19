@@ -16,10 +16,10 @@
 I've tested the spatial tree implementation against the naive implementation for the first 1000 entries in the user file. Check ```test/scala/io/github/ankushs92/index/SpatialIndexSpec``` and run it if you wish.
 
 ## Setup
-The program expects an ```outputPath```, which should be a directory under which the output file will be written to.
-
 You can run the application in two ways. In both approaches, 3 program arguments are expected : ```/path/to/user-geo-sample.csv.gz```, ```/path/to/optd-airports-sample.csv.gz```, ```/path/to/outputDir```. 
 Here, ```path/to/outputDir``` is the directory where will the output of the program will be written.
+
+The order for the program arguments are : ```/path/to/user-geo-sample.csv.gz /path/to/optd-airports-sample.csv.gz /path/to/outputDir```
 
 The two approaches are 
 
