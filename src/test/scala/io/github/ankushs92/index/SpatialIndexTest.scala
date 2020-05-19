@@ -26,7 +26,7 @@ class SpatialIndexTest extends FlatSpec {
     //Build a cache of [user.uid, closestairport.iata] pairs. This is built on top of naive implementation
     val users = usersSrc
       .getLines
-      .slice(1, 1001) // Ignoring header
+      .slice(1, 2001) // Ignoring header
       .map { line => User(line) }
       .toList
 

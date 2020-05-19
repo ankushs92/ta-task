@@ -7,13 +7,14 @@
 
 4. The airports file is sent to all flink workers on application startup, wherein each worker builds a local spatial index (which takes roughly 1-1.2 seconds for each worker)
 
-5. Each user item is streamed from the users file, wherein each worker reads a partition of the users file and a user object is enriched with the closest airport via a findNearestNeighbour search made to the local spatial index on each worker
+5. The spatial index is built on each flink worker when the worker starts(one worker runs on one core). Takes roughly 700ms-1300 ms to build the index
+ 
+6. Each user item is streamed from the users file, wherein each worker reads a partition of the users file and a user object is enriched with the closest airport via a findNearestNeighbour search made to the local spatial index on each worker
 
 6. The final results are outputted to a file. You would need to pass the ```outputPath``` to the program. The ```StreamingFileSink``` will write the results into this directory 
 
-
 ## Tests
-I've tested the spatial tree implementation against the naive implementation for the first 1000 entries in the user file. Check ```test/scala/io/github/ankushs92/index/SpatialIndexSpec``` and run it if you wish.
+I've tested the spatial tree implementation against the naive implementation for the first 1000 entries in the user file. Check ```test/scala/io/github/ankushs92/index/SpatialIndexTest``` and run it if you wish.
 
 ## Setup
 You can run the application in two ways. In both approaches, 3 program arguments are expected : ```/path/to/user-geo-sample.csv.gz```, ```/path/to/optd-airports-sample.csv.gz```, ```/path/to/outputDir```. 
