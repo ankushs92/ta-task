@@ -5,11 +5,9 @@
 
 3. For spatial indexing BallTree[1] was used to partition the (lat,lng) pairs in airports file. This implementation performed far superior ( O(logn) avg case) as compared to the naive implementation that iterates over all the airports and finds minimum distance(O(n) time complexity)
 
-4. The airports file is sent to all flink workers on application startup, wherein each worker builds a local spatial index (which takes roughly 1-1.2 seconds for each worker)
-
-5. The spatial index is built on each flink worker when the worker starts(one worker runs on one core). Takes roughly 700ms-1300 ms to build the index
+4. The spatial index is built on each flink worker when the worker starts(one worker runs on one core). Takes roughly 700ms-1300 ms to build the index
  
-6. Each user item is streamed from the users file, wherein each worker reads a partition of the users file and a user object is enriched with the closest airport via a findNearestNeighbour search made to the local spatial index on each worker
+5. Each user item is streamed from the users file, wherein each worker reads a partition of the users file and a user object is enriched with the closest airport via a findNearestNeighbour search made to the local spatial index on each worker
 
 6. The final results are outputted to a file. You would need to pass the ```outputPath``` to the program. The ```StreamingFileSink``` will write the results into this directory 
 
